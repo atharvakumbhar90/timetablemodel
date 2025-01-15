@@ -212,5 +212,3 @@ def check_teacher_clash(teacher_id, day_of_week, time_slot):
     
     return False  # No clash
 
-if __name__ == '__main__':
-    app.run(debug=True)
