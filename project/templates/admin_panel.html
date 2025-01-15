@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons form {
+            display: inline-block;
+        }
+
+        button {
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .blue-btn {
+            background-color: #3498db;
+        }
+
+        .red-btn {
+            background-color: #e74c3c;
+        }
+
+        .green-btn {
+            background-color: #2ecc71;
+        }
+
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #ecf0f1;
+        }
+
+        td input,
+        td select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        td input[type="text"],
+        td select {
+            font-size: 14px;
+        }
+
+        .form-label {
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .action-buttons form {
+                margin-bottom: 10px;
+            }
+
+            table,
+            .form-group input,
+            .form-group select {
+                font-size: 14px;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+        .alert {
+            color: red;
+            font-size: 14px;
+        }
+    </style>
+   <!DOCTYPE html>
+   <html lang="en">
+   <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title>Admin Panel</title>
+       <style>
+           /* Add your custom styles here */
+       </style>
+       <script>
+           // Function to switch between different class timetables
+           function switchTimetable(classNumber) {
+               document.querySelectorAll('.timetable').forEach(function (el) {
+                   el.style.display = 'none';
+               });
+               document.getElementById('timetable-' + classNumber).style.display = 'block';
+           }
+   
+           // Function to confirm deletion of the full timetable
+           function confirmDeletion() {
+               return confirm("Are you sure you want to delete the full timetable?");
+           }
+   
+           // Function to confirm teacher removal
+           function confirmTeacherRemoval(teacherName) {
+               return confirm("Are you sure you want to remove " + teacherName + " from the system?");
+           }
+       </script>
+   </head>
+   <body>
+   <div class="container">
+       <h1>Admin Panel</h1>
+       <div class="action-buttons">
+           <!-- Logout Button -->
+           <form action="{{ url_for('logout') }}" method="GET">
+               <button type="submit" class="blue-btn">Logout</button>
+           </form>
+           <!-- Delete Full Timetable -->
+           <form method="POST" onsubmit="return confirmDeletion();">
+               <button type="submit" name="delete_timetable" value="true" class="red-btn">Delete Full Timetable</button>
+           </form>
+           
+           <!-- Redirect to Class 2 Timetable Management -->
+           <a href="/admin/class2">
+               <button class="green-btn">Class 2 Timetable</button>
+           </a>
+       </div>
+                               <!-- Display the message if it exists -->
+                               {% if message %}
+                               <div class="alert">
+                                   {{ message }}
+                               </div>
+                               {% endif %}
+       <!-- Timetable Grid Section for Class 1 -->
+       <div id="timetable-1" class="section timetable">
+           <h2>Class 1 Timetable Grid</h2>
+           <table>
+               <thead>
+                   <tr>
+                       <th>Time</th>
+                       <th>Monday</th>
+                       <th>Tuesday</th>
+                       <th>Wednesday</th>
+                       <th>Thursday</th>
+                       <th>Friday</th>
+                   </tr>
+               </thead>
+               <tbody>
+                   {% for time_slot in ['7:30-8:30', '8:30-9:30', '9:30-10:30', '10:30-11:00', '11:00-12:00', '12:00-1:00'] %}
+                   <tr>
+                       <th>{{ time_slot }}</th>
+                       {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+                       <td>
+                           <form method="POST" action="/admin">
+                               <input type="hidden" name="day" value="{{ day }}">
+                               <input type="hidden" name="time_slot" value="{{ time_slot }}">
+                               <label for="subject" class="form-label">Subject:</label>
+                               <input type="text" name="subject"
+                                   value="{% for entry in timetable %}{% if entry.day_of_week == day and entry.time_slot == time_slot %}{{ entry.subject }}{% endif %}{% endfor %}" required>
+                               <label for="teacher" class="form-label">Teacher:</label>
+                               <select name="teacher" required>
+                                   {% for teacher in teachers %}
+                                   <option value="{{ teacher.id }}" {% for entry in timetable %} {% if entry.day_of_week == day and entry.time_slot == time_slot and entry.teacher.id == teacher.id %} selected {% endif %} {% endfor %}>
+                                       {{ teacher.username }} - {{ teacher.subject }}
+                                   </option>
+                                   {% endfor %}
+                               </select>
+                               <button type="submit" name="add_update_timetable" value="true">Update</button>
+                           </form>
+                       </td>
+                       {% endfor %}
+                   </tr>
+                   {% endfor %}
+               </tbody>
+           </table>
+       </div>
+   
+       <!-- Timetable Grid Section for Class 2 (Hidden by default) -->
+       <div id="timetable-2" class="section timetable" style="display: none;">
+           <h2>Class 2 Timetable Grid</h2>
+           <table>
+               <thead>
+                   <tr>
+                       <th>Time</th>
+                       <th>Monday</th>
+                       <th>Tuesday</th>
+                       <th>Wednesday</th>
+                       <th>Thursday</th>
+                       <th>Friday</th>
+                   </tr>
+               </thead>
+               <tbody>
+                   {% for time_slot in ['7:30-8:30', '8:30-9:30', '9:30-10:30', '10:30-11:00', '11:00-12:00', '12:00-1:00'] %}
+                   <tr>
+                       <th>{{ time_slot }}</th>
+                       {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+                       <td>
+                           <form method="POST" action="/admin/class2">
+                               <input type="hidden" name="day" value="{{ day }}">
+                               <input type="hidden" name="time_slot" value="{{ time_slot }}">
+                               <label for="subject" class="form-label">Subject:</label>
+                               <input type="text" name="subject"
+                                   value="{% for entry in timetable2 %}{% if entry.day_of_week == day and entry.time_slot == time_slot %}{{ entry.subject }}{% endif %}{% endfor %}" required>
+                               <label for="teacher" class="form-label">Teacher:</label>
+                               <select name="teacher" required>
+                                   {% for teacher in teachers %}
+                                   <option value="{{ teacher.id }}" {% for entry in timetable2 %} {% if entry.day_of_week == day and entry.time_slot == time_slot and entry.teacher.id == teacher.id %} selected {% endif %} {% endfor %}>
+                                       {{ teacher.username }} - {{ teacher.subject }}
+                                   </option>
+                                   {% endfor %}
+                               </select>
+                               <button type="submit" name="add_update_timetable" value="true">Update</button>
+                           </form>
+                       </td>
+                       {% endfor %}
+                   </tr>
+                   {% endfor %}
+               </tbody>
+           </table>
+       </div>
+   
+       <!-- Add or Update Timetable Entry Section -->
+       <div class="section">
+           <h2>Add or Update Timetable Entry</h2>
+           <form method="POST" action="/admin">
+               <div class="form-group">
+                   <label for="day" class="form-label">Day:</label>
+                   <select id="day" name="day" required>
+                       <option value="Monday">Monday</option>
+                       <option value="Tuesday">Tuesday</option>
+                       <option value="Wednesday">Wednesday</option>
+                       <option value="Thursday">Thursday</option>
+                       <option value="Friday">Friday</option>
+                   </select>
+               </div>
+               <div class="form-group">
+                   <label for="time_slot" class="form-label">Time Slot:</label>
+                   <input type="text" id="time_slot" name="time_slot" placeholder="e.g., 9:00-10:00" required>
+               </div>
+               <div class="form-group">
+                   <label for="subject" class="form-label">Subject:</label>
+                   <input type="text" id="subject" name="subject" required>
+               </div>
+               <div class="form-group">
+                   <label for="teacher" class="form-label">Teacher:</label>
+                   <select id="teacher" name="teacher" required>
+                       {% for teacher in teachers %}
+                       <option value="{{ teacher.id }}">{{ teacher.username }}</option>
+                       {% endfor %}
+                   </select>
+               </div>
+               <button type="submit" name="add_update_timetable" value="true" class="green-btn">Add/Update Entry</button>
+           </form>
+       </div>
+   
+       <!-- Add New Teacher Section -->
+       <div class="section">
+           <h2>Add New Teacher</h2>
+           <form method="POST">
+               <div class="form-group">
+                   <label for="teacher_name" class="form-label">Teacher Name:</label>
+                   <input type="text" id="teacher_name" name="teacher_name" placeholder="Enter Teacher Name" required>
+               </div>
+               <div class="form-group">
+                   <label for="teacher_password" class="form-label">Password:</label>
+                   <input type="password" id="teacher_password" name="teacher_password" placeholder="Enter Password" required>
+               </div>
+               <button type="submit" name="add_teacher" class="green-btn">Add Teacher</button>
+           </form>
+       </div>
+   
+       <!-- All Teachers Section -->
+       <div class="section">
+           <h2>All Teachers</h2>
+           <table>
+               <thead>
+                   <tr>
+                       <th>Teacher Name</th>
+                       <th>Actions</th>
+                   </tr>
+               </thead>
+               <tbody>
+                   {% for teacher in teachers %}
+                   <tr>
+                       <td>{{ teacher.username }}</td>
+                       <td>
+                           <form method="POST" style="display:inline;" onsubmit="return confirmTeacherRemoval('{{ teacher.username }}');">
+                               <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+                               <button type="submit" name="remove_teacher" class="red-btn">Remove</button>
+                           </form>
+                       </td>
+                   </tr>
+                   {% endfor %}
+               </tbody>
+           </table>
+       </div>
+   </div>
+   </body>
+   </html>
+   

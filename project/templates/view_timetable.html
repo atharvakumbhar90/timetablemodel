@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Timetable</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>Timetable</h1>
+    <table>
+        <tr>
+            <th>Day</th>
+            <th>Time Slot</th>
+            <th>Subject</th>
+            <th>Teacher</th>
+        </tr>
+        {% for entry in timetable %}
+        <tr>
+            <td>{{ entry.day_of_week }}</td>
+            <td>{{ entry.time_slot }}</td>
+            <td>{{ entry.subject }}</td>
+            <td>{{ entry.teacher.name }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

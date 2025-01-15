@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .timetable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .timetable th, .timetable td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .timetable th {
+            background-color: #f2f2f2;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        .section h2 {
+            margin-top: 0;
+        }
+        button {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        select {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .mark-absence-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .mark-absence-btn:hover {
+            background-color: #c0392b;
+        }
+        .alert {
+            color: red;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Teacher Panel</h1>
+    
+    <a href="{{ url_for('logout') }}">Logout</a>
+                        <!-- Display the message if it exists -->
+                        {% if message %}
+                        <div class="alert">
+                            {{ message }}
+                        </div>
+                        {% endif %}
+    <!-- Your Timetable Section -->
+    <div class="section">
+        <h2>Your Timetable</h2>
+        
+        <!-- Timetable 1 -->
+        <h3>Timetable 1</h3>
+        <table class="timetable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for time_slot in ['7:30-8:30', '8:30-9:30', '9:30-10:30', '10:30-11:00', '11:00-12:00', '12:00-1:00'] %}
+                <tr>
+                    <th>{{ time_slot }}</th>
+                    {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+                    <td>
+                        {% for entry in timetable %}
+                            {% if entry.day_of_week == day and entry.time_slot == time_slot %}
+                                <strong>{{ entry.subject }}</strong><br>
+                                {{ entry.teacher.username }}
+                                <form method="POST" action="{{ url_for('teacher_dashboard') }}">
+                                    <input type="hidden" name="day" value="{{ day }}">
+                                    <input type="hidden" name="time_slot" value="{{ time_slot }}">
+                                    <button type="submit" name="mark_absent_slot">Mark Absence</button>
+                                </form>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Timetable 2 -->
+        <h3>Timetable 2</h3>
+        <table class="timetable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for time_slot in ['7:30-8:30', '8:30-9:30', '9:30-10:30', '10:30-11:00', '11:00-12:00', '12:00-1:00'] %}
+                <tr>
+                    <th>{{ time_slot }}</th>
+                    {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+                    <td>
+                        {% for entry in timetable_2 %}
+                            {% if entry.day_of_week == day and entry.time_slot == time_slot %}
+                                <strong>{{ entry.subject }}</strong><br>
+                                {{ entry.teacher.username }}
+                                <form method="POST" action="{{ url_for('teacher_dashboard') }}">
+                                    <input type="hidden" name="day" value="{{ day }}">
+                                    <input type="hidden" name="time_slot" value="{{ time_slot }}">
+                                    <input type="hidden" name="timetable_type" value="2">
+                                    <button type="submit" name="mark_absent_slot" class="mark-absence-btn">Mark Absence</button>
+                                </form>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mark Absence for Entire Day Section -->
+    <div class="section">
+        <h2>Mark Your Absence for Entire Day</h2>
+        <form method="POST">
+            <label for="day">Select Day:</label>
+            <select id="day" name="day" required>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+            </select><br><br>
+
+            <button type="submit" name="mark_absent_day">Mark Absence for Entire Day</button>
+        </form>
+    </div>
+
+</body>
+</html>
