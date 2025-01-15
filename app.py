@@ -133,40 +133,81 @@ def teacher_dashboard():
     return redirect(url_for('login'))
 
 
-# Admin Panel
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_panel():
     if 'role' in session and session['role'] == 'admin':
-        message = ""
         if request.method == 'POST':
+            # Add a new teacher
             if 'add_teacher' in request.form:
                 teacher_name = request.form['teacher_name']
                 teacher_password = request.form['teacher_password']
 
-                if User.query.filter_by(username=teacher_name, role='teacher').first():
-                    message = f"Teacher {teacher_name} already exists."
-                else:
-                    new_teacher = User(username=teacher_name, password=teacher_password, role='teacher')
-                    db.session.add(new_teacher)
-                    db.session.commit()
-                    message = "Teacher added successfully."
+                # Check if the teacher already exists
+                existing_teacher = User.query.filter_by(username=teacher_name, role='teacher').first()
+                if existing_teacher:
+                    return f"Teacher {teacher_name} already exists."
+                
+                # Create a new teacher
+                new_teacher = User(username=teacher_name, password=teacher_password, role='teacher')
+                db.session.add(new_teacher)
+                db.session.commit()
+                return redirect(url_for('admin_panel'))
 
+            # Remove a teacher
             elif 'remove_teacher' in request.form:
                 teacher_id = request.form['teacher_id']
 
+                # Check if the teacher exists
                 teacher = User.query.filter_by(id=teacher_id, role='teacher').first()
                 if teacher:
                     db.session.delete(teacher)
                     db.session.commit()
-                    message = "Teacher removed successfully."
+                return redirect(url_for('admin_panel'))
+            
+    if 'role' in session and session['role'] == 'admin':
+        if request.method == 'POST':
+            if 'add_update_timetable' in request.form:
+                # Determine which class's timetable is being updated
+                class_type = request.form.get('class_type', 'class1')  # Default to class1
+                
+                day = request.form['day']
+                time_slot = request.form['time_slot']
+                subject = request.form['subject']
+                teacher_id = request.form['teacher']
+
+                # Check for conflicts using the check_teacher_clash function
+                if check_teacher_clash(teacher_id, day, time_slot):
+                    flash(f"Teacher {teacher_id} is already assigned to a class at {time_slot} on {day}. Please choose a different slot.", 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                # If no conflict, proceed to add or update the timetable
+                if class_type == 'class1':  # Update Class 1 Timetable (Timetable)
+                    timetable_entry = Timetable.query.filter_by(day_of_week=day, time_slot=time_slot).first()
+                    if timetable_entry:
+                        timetable_entry.subject = subject
+                        timetable_entry.teacher_id = teacher_id
+                    else:
+                        new_timetable_entry = Timetable(day_of_week=day, time_slot=time_slot, subject=subject, teacher_id=teacher_id)
+                        db.session.add(new_timetable_entry)
+                
+                elif class_type == 'class2':  # Update Class 2 Timetable (Timetable2)
+                    timetable_entry_2 = Timetable2.query.filter_by(day_of_week=day, time_slot=time_slot).first()
+                    if timetable_entry_2:
+                        timetable_entry_2.subject = subject
+                        timetable_entry_2.teacher_id = teacher_id
+                    else:
+                        new_timetable_entry_2 = Timetable2(day_of_week=day, time_slot=time_slot, subject=subject, teacher_id=teacher_id)
+                        db.session.add(new_timetable_entry_2)
+
+                db.session.commit()
+                flash("Timetable updated successfully.", 'success')
 
         teachers = User.query.filter_by(role='teacher').all()
         timetable = Timetable.query.all()
         timetable_2 = Timetable2.query.all()
-        return render_template('admin_panel.html', teachers=teachers, timetable=timetable, timetable_2=timetable_2, message=message)
+        return render_template('admin_panel.html', teachers=teachers, timetable=timetable, timetable_2=timetable_2)
 
     return redirect(url_for('login'))
-
 @app.route('/admin/class2', methods=['GET', 'POST'])
 def admin_class2_timetable():
     if 'role' in session and session['role'] == 'admin':
@@ -198,6 +239,7 @@ def admin_class2_timetable():
         return render_template('admin_class2_timetable.html', timetable2=timetable2_entries, teachers=teachers)
 
     return redirect(url_for('login'))
+
 
 #CLASH
 def check_teacher_clash(teacher_id, day_of_week, time_slot):
