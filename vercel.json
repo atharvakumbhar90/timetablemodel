@@ -12,7 +12,5 @@
             "src":"/(.*)",
             "dest":"/"
         }
-        } ], "env": { "FLASK_APP": "index.py",  // Ensure the correct app file "FLASK_ENV": "production", // Environment setting "DATABASE_URL": "sqlite:///timetable.db"  // External database if needed 
-    }
     ]
 }
